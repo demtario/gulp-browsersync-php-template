@@ -7,13 +7,14 @@ import autoprefixer from 'gulp-autoprefixer';
 import clean from 'gulp-clean-css';
 import browserSync from 'browser-sync';
 import del from 'del';
+import php from 'gulp-connect-php'
 
-const sync = browserSync.create();
-const reload = sync.reload;
+const reload = browserSync.reload;
 const config = {
     paths: {
         src: {
             html: './src/**/*.html',
+            php: './src/**/*.php',
             img: './src/img/**.*',
             sass: ['src/sass/app.scss'],
             js: [
@@ -38,7 +39,7 @@ gulp.task('sass', () => {
         }))
         .pipe(clean())
         .pipe(gulp.dest(config.paths.dist.css))
-        .pipe(sync.stream());
+        .pipe(browserSync.stream());
 });
 
 gulp.task('js', () => {
@@ -55,6 +56,9 @@ gulp.task('static', () => {
     gulp.src(config.paths.src.html)
         .pipe(gulp.dest(config.paths.dist.main));
 
+    gulp.src(config.paths.src.php)
+        .pipe(gulp.dest(config.paths.dist.main));
+
     gulp.src(config.paths.src.img)
         .pipe(gulp.dest(config.paths.dist.img));
 
@@ -69,18 +73,27 @@ gulp.task('build', ['clean'], function () {
    gulp.start('sass', 'js', 'static');
 });
 
-gulp.task('server', () => {
-    sync.init({
-        injectChanges: true,
-        server: config.paths.dist.main
+gulp.task('php', () => {
+    php.server({ base: 'app', port: 8010, keepalive: true});
+});
+
+gulp.task('server', ['php'], () => {
+
+    php.server({
+        base: config.paths.dist.main
+    }, () =>{
+        browserSync({
+          proxy: '127.0.0.1:8000'
+        });
     });
 });
 
 gulp.task('watch', ['default'], function () {
-    gulp.watch('src/sass/app.scss', ['sass']);
+    gulp.watch('src/sass/**/*.scss', ['sass']);
     gulp.watch('src/js/**/*.js', ['js']);
-    gulp.watch('src/*.html', ['static']);
+    gulp.watch('src/**/*.html', ['static']);
+    gulp.watch('src/**/*.php', ['static']);
     gulp.start('server');
 });
 
-gulp.task('default', ['build']);
+gulp.task('default', ['clean', 'build']);
