@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "build": "gulp",
-    "dev": "gulp watch"
+    "serve": "gulp watch"
   },
   "keywords": [],
   "author": "",
@@ -23,6 +23,8 @@
     "gulp-concat": "^2.6.1",
     "gulp-connect-php": "^1.0.3",
     "gulp-sass": "^4.0.1",
-    "gulp-uglify": "^3.0.0"
+    "gulp-sourcemaps": "^2.6.4",
+    "gulp-uglify": "^3.0.0",
+    "gulp-wait": "0.0.2"
   }
 }

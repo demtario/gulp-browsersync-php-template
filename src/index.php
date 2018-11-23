@@ -4,12 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Wowo</title>
+    <title>Gulp & BrowserSync & PHP</title>
     <link rel="stylesheet" href="/css/app.css">
 </head>
-<body>
+<body class="home">
 
-    <?php echo 'Hello World Gulp & BrowserSync & PHP!' ?>
+    <h1>
+        <?php echo 'Hello World Gulp & BrowserSync & PHP!' ?>
+    </h1>
 
     <script src="/js/app.js"></script>
 </body>

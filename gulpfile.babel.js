@@ -8,6 +8,9 @@ import clean from 'gulp-clean-css';
 import browserSync from 'browser-sync';
 import del from 'del';
 import php from 'gulp-connect-php'
+import wait from 'gulp-wait'
+import sourcemaps from 'gulp-sourcemaps'
+
 
 const reload = browserSync.reload;
 const config = {
@@ -15,11 +18,10 @@ const config = {
         src: {
             html: './src/**/*.html',
             php: './src/**/*.php',
-            img: './src/img/**.*',
+            img: './src/img/**/*.*',
             sass: ['src/sass/app.scss'],
             js: [
-                'src/js/libs/vue.js',
-                'src/js/app.js',
+                'src/js/**/*.js'
             ]
         },
         dist: {
@@ -33,11 +35,15 @@ const config = {
 
 gulp.task('sass', () => {
     return gulp.src(config.paths.src.sass)
+        .pipe(wait())
+        .pipe(sourcemaps.init())
         .pipe(sass())
+            .on('error', swallowError)
         .pipe(autoprefixer({
             browsers: ['last 2 versions']
         }))
         .pipe(clean())
+        .pipe(sourcemaps.write('./'))
         .pipe(gulp.dest(config.paths.dist.css))
         .pipe(browserSync.stream());
 });
@@ -97,3 +103,8 @@ gulp.task('watch', ['default'], function () {
 });
 
 gulp.task('default', ['clean', 'build']);
+
+function swallowError (err) {
+    console.log(err.toString())
+    this.emit('end')
+}
