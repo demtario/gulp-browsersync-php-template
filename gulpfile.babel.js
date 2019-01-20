@@ -1,3 +1,6 @@
+"use strict";
+
+// Plugins
 import gulp from 'gulp';
 import babel from 'gulp-babel';
 import sass from 'gulp-sass';
@@ -10,101 +13,147 @@ import del from 'del';
 import php from 'gulp-connect-php'
 import wait from 'gulp-wait'
 import sourcemaps from 'gulp-sourcemaps'
+import newer from 'gulp-newer'
+import imagemin from "gulp-imagemin";
 
-
-const reload = browserSync.reload;
+// Path config
 const config = {
-    paths: {
-        src: {
-            html: './src/**/*.html',
-            php: './src/**/*.php',
-            img: './src/img/**/*.*',
-            sass: ['src/sass/app.scss'],
-            js: [
-                'src/js/**/*.js'
-            ]
-        },
-        dist: {
-            main: './dist',
-            css: './dist/css',
-            js: './dist/js',
-            img: './dist/img'
-        }
+  paths: {
+    src: {
+      html: './src/**/*.html',
+      php: './src/**/*.php',
+      img: './src/img/**/*.*',
+      sass: ['src/sass/app.scss'],
+      js: [
+        'src/js/**/*.js'
+      ]
+    },
+    dist: {
+      main: './dist',
+      css: './dist/css',
+      js: './dist/js',
+      img: './dist/img'
     }
+  }
 };
 
-gulp.task('sass', () => {
-    return gulp.src(config.paths.src.sass)
-        .pipe(wait())
-        .pipe(sourcemaps.init())
-        .pipe(sass())
-            .on('error', swallowError)
-        .pipe(autoprefixer({
-            browsers: ['last 2 versions']
-        }))
-        .pipe(clean())
-        .pipe(sourcemaps.write('./'))
-        .pipe(gulp.dest(config.paths.dist.css))
-        .pipe(browserSync.stream());
-});
+// DevServer
+const devServer = (done) => {
+  php.server({
+    base: config.paths.dist.main,
+    port: 8010,
+    keepalive: true
+  });
 
-gulp.task('js', () => {
-    gulp.src(config.paths.src.js)
-        .pipe(babel({ presets: ['env'] }))
-        .pipe(concat('app.js'))
-        .pipe(uglify())
-        .pipe(gulp.dest(config.paths.dist.js));
-
-    reload();
-});
-
-gulp.task('static', () => {
-    gulp.src(config.paths.src.html)
-        .pipe(gulp.dest(config.paths.dist.main));
-
-    gulp.src(config.paths.src.php)
-        .pipe(gulp.dest(config.paths.dist.main));
-
-    gulp.src(config.paths.src.img)
-        .pipe(gulp.dest(config.paths.dist.img));
-
-    reload();
-});
-
-gulp.task('clean', () => {
-    return del([config.paths.dist.main]);
-});
-
-gulp.task('build', ['clean'], function () {
-   gulp.start('sass', 'js', 'static');
-});
-
-gulp.task('php', () => {
-    php.server({ base: 'app', port: 8010, keepalive: true});
-});
-
-gulp.task('server', ['php'], () => {
-
-    php.server({
-        base: config.paths.dist.main
-    }, () =>{
-        browserSync({
-          proxy: '127.0.0.1:8000'
-        });
+  php.server({
+    base: config.paths.dist.main,
+    keepalive: true
+  }, () => {
+    browserSync.init({
+      proxy: '127.0.0.1:8000',
+      baseDir: "./dist",
+      open:true,
+      notify:false
     });
-});
+  });
 
-gulp.task('watch', ['default'], function () {
-    gulp.watch('src/sass/**/*.scss', ['sass']);
-    gulp.watch('src/js/**/*.js', ['js']);
-    gulp.watch('src/**/*.html', ['static']);
-    gulp.watch('src/**/*.php', ['static']);
-    gulp.start('server');
-});
-
-gulp.task('default', ['clean', 'build']);
-
-function swallowError (err) {
-    console.log(err.toString())
-    this.emit('end')
+  done()
 }
+
+// BrowserSync Reload
+const browserSyncReload = (done) => {
+  browserSync.reload();
+  done()
+}
+
+// CSS Compile and Lint
+const css = () => {
+  return gulp
+    .src(config.paths.src.sass)
+    .pipe(wait())
+    .pipe(sourcemaps.init())
+    .pipe(sass())
+      .on('error', sass.logError)
+    .pipe(autoprefixer({
+      browsers: ['last 2 versions']
+    }))
+    .pipe(clean())
+    .pipe(sourcemaps.write('./'))
+    .pipe(gulp.dest(config.paths.dist.css))
+    .pipe(browserSync.stream());
+}
+
+// Javascript
+const scripts = (done) => {
+  gulp
+    .src(config.paths.src.js)
+    .pipe(babel({
+      presets: ['env']
+    }))
+    .pipe(concat('app.js'))
+    .pipe(uglify())
+    .pipe(gulp.dest(config.paths.dist.js));
+
+  browserSyncReload()
+  done()
+}
+
+// Optimize Images
+function images() {
+  return gulp
+    .src(config.paths.src.img)
+    .pipe(newer(config.paths.dist.img))
+    .pipe(
+      imagemin([
+        imagemin.gifsicle({ interlaced: true }),
+        imagemin.jpegtran({ progressive: true }),
+        imagemin.optipng({ optimizationLevel: 5 }),
+        imagemin.svgo({
+          plugins: [
+            {
+              removeViewBox: false,
+              collapseGroups: true
+            }
+          ]
+        })
+      ])
+    )
+    .pipe(gulp.dest(config.paths.dist.img));
+}
+
+// Static file managment
+const staticFiles = (done) => {
+  gulp.src(config.paths.src.html)
+    .pipe(gulp.dest(config.paths.dist.main));
+
+  gulp.src(config.paths.src.php)
+    .pipe(gulp.dest(config.paths.dist.main));
+
+  // gulp.src(config.paths.src.img)
+  //   .pipe(gulp.dest(config.paths.dist.img));
+
+  done()
+}
+
+const cleanDir = () => {
+  return del([config.paths.dist.main]);
+}
+
+const watchFiles = () => {
+  gulp.watch('src/sass/**/*.scss', gulp.series(css));
+  gulp.watch('src/js/**/*.js', gulp.series(scripts));
+  gulp.watch('src/**/*.html', gulp.series(staticFiles, browserSyncReload));
+  gulp.watch('src/**/*.php', gulp.series(staticFiles, browserSyncReload));
+  gulp.watch('src/img/**/*', gulp.series(images))
+}
+
+const build = gulp.series(cleanDir, gulp.parallel(css, scripts, staticFiles, images))
+const watch = gulp.parallel(watchFiles, devServer)
+
+
+exports.default = build
+exports.build = build
+exports.watch = watch
+exports.css = css
+exports.js = scripts
+exports.clean = cleanDir
