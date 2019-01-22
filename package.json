@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "build": "gulp",
-    "serve": "gulp watch"
+    "serve": "gulp serve",
+    "watch": "gulp watch"
   },
   "keywords": [],
   "author": "",

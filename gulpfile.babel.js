@@ -80,7 +80,7 @@ const css = () => {
     .pipe(clean())
     .pipe(sourcemaps.write('./'))
     .pipe(gulp.dest(config.paths.dist.css))
-    .pipe(browserSync.stream());
+    // .pipe(browserSync.stream());
 }
 
 // Javascript
@@ -93,8 +93,6 @@ const scripts = (done) => {
     .pipe(concat('app.js'))
     .pipe(uglify())
     .pipe(gulp.dest(config.paths.dist.js));
-
-  browserSyncReload()
   done()
 }
 
@@ -140,20 +138,22 @@ const cleanDir = () => {
 }
 
 const watchFiles = () => {
-  gulp.watch('src/sass/**/*.scss', gulp.series(css));
-  gulp.watch('src/js/**/*.js', gulp.series(scripts));
+  gulp.watch('src/sass/**/*.scss', gulp.series(css, browserSyncReload));
+  gulp.watch('src/js/**/*.js', gulp.series(scripts, browserSyncReload));
   gulp.watch('src/**/*.html', gulp.series(staticFiles, browserSyncReload));
   gulp.watch('src/**/*.php', gulp.series(staticFiles, browserSyncReload));
   gulp.watch('src/img/**/*', gulp.series(images))
 }
 
 const build = gulp.series(cleanDir, gulp.parallel(css, scripts, staticFiles, images))
-const watch = gulp.parallel(watchFiles, devServer)
+const serve = gulp.series(build, gulp.parallel(watchFiles, devServer))
+const watch = gulp.series(build, devServer)
 
 
 exports.default = build
 exports.build = build
 exports.watch = watch
+exports.serve = serve
 exports.css = css
 exports.js = scripts
 exports.clean = cleanDir
