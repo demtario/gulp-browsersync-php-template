@@ -9,7 +9,7 @@
     "watch": "gulp watch"
   },
   "keywords": [],
-  "author": "",
+  "author": "Artur Mędrygał <medrygal.artur@gmail.com>",
   "license": "ISC",
   "devDependencies": {
     "babel": "^6.23.0",
@@ -23,7 +23,7 @@
     "gulp-clean-css": "^4.0.0",
     "gulp-concat": "^2.6.1",
     "gulp-connect-php": "^1.0.3",
-    "gulp-imagemin": "^5.0.3",
+    "gulp-image": "^4.4.1",
     "gulp-newer": "^1.4.0",
     "gulp-sass": "^4.0.2",
     "gulp-sourcemaps": "^2.6.4",

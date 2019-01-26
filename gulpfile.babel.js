@@ -14,14 +14,18 @@ import php from 'gulp-connect-php'
 import wait from 'gulp-wait'
 import sourcemaps from 'gulp-sourcemaps'
 import newer from 'gulp-newer'
-import imagemin from "gulp-imagemin";
+import image from 'gulp-image';
+
+browserSync.create('devServer')
 
 // Path config
 const config = {
   paths: {
     src: {
-      html: './src/**/*.html',
-      php: './src/**/*.php',
+      static: [
+        './src/**/*.html',
+        './src/**/*.php'
+      ],
       img: './src/img/**/*.*',
       sass: ['src/sass/app.scss'],
       js: [
@@ -49,12 +53,14 @@ const devServer = (done) => {
     base: config.paths.dist.main,
     keepalive: true
   }, () => {
-    browserSync.init({
-      proxy: '127.0.0.1:8000',
-      baseDir: "./dist",
-      open:true,
-      notify:false
-    });
+    browserSync
+      .get('devServer')  
+      .init({
+        proxy: '127.0.0.1:8000',
+        baseDir: "./dist",
+        open:true,
+        notify:false
+      });
   });
 
   done()
@@ -62,7 +68,9 @@ const devServer = (done) => {
 
 // BrowserSync Reload
 const browserSyncReload = (done) => {
-  browserSync.reload();
+  if(browserSync.has('devServer'))
+    browserSync.reload()
+
   done()
 }
 
@@ -101,30 +109,14 @@ function images() {
   return gulp
     .src(config.paths.src.img)
     .pipe(newer(config.paths.dist.img))
-    .pipe(
-      imagemin([
-        imagemin.gifsicle({ interlaced: true }),
-        imagemin.jpegtran({ progressive: true }),
-        imagemin.optipng({ optimizationLevel: 5 }),
-        imagemin.svgo({
-          plugins: [
-            {
-              removeViewBox: false,
-              collapseGroups: true
-            }
-          ]
-        })
-      ])
-    )
+    .pipe(image())
     .pipe(gulp.dest(config.paths.dist.img));
 }
 
 // Static file managment
 const staticFiles = (done) => {
-  gulp.src(config.paths.src.html)
-    .pipe(gulp.dest(config.paths.dist.main));
-
-  gulp.src(config.paths.src.php)
+  gulp.src(config.paths.src.static)
+    .pipe(newer(config.paths.dist.main))
     .pipe(gulp.dest(config.paths.dist.main));
 
   // gulp.src(config.paths.src.img)
@@ -147,7 +139,7 @@ const watchFiles = () => {
 
 const build = gulp.series(cleanDir, gulp.parallel(css, scripts, staticFiles, images))
 const serve = gulp.series(build, gulp.parallel(watchFiles, devServer))
-const watch = gulp.series(build, devServer)
+const watch = gulp.parallel(build, watchFiles)
 
 
 exports.default = build
