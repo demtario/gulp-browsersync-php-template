@@ -69,15 +69,16 @@ const devServer = (done) => {
 // BrowserSync Reload
 const browserSyncReload = (done) => {
   if(browserSync.has('devServer'))
-    browserSync.reload()
+    browserSync
+      .get('devServer')
+      .reload()
 
   done()
 }
 
 // CSS Compile and Lint
 const css = () => {
-  return gulp
-    .src(config.paths.src.sass)
+  return gulp.src(config.paths.src.sass)
     .pipe(wait())
     .pipe(sourcemaps.init())
     .pipe(sass())
@@ -88,41 +89,33 @@ const css = () => {
     .pipe(clean())
     .pipe(sourcemaps.write('./'))
     .pipe(gulp.dest(config.paths.dist.css))
-    // .pipe(browserSync.stream());
+    .pipe(browserSync.has('devServer') ? browserSync.get('devServer').stream() : null);
 }
 
 // Javascript
-const scripts = (done) => {
-  gulp
-    .src(config.paths.src.js)
+const scripts = () => {
+  return gulp.src(config.paths.src.js)
     .pipe(babel({
       presets: ['env']
     }))
     .pipe(concat('app.js'))
     .pipe(uglify())
     .pipe(gulp.dest(config.paths.dist.js));
-  done()
 }
 
 // Optimize Images
 function images() {
-  return gulp
-    .src(config.paths.src.img)
+  return gulp.src(config.paths.src.img)
     .pipe(newer(config.paths.dist.img))
     .pipe(image())
     .pipe(gulp.dest(config.paths.dist.img));
 }
 
 // Static file managment
-const staticFiles = (done) => {
-  gulp.src(config.paths.src.static)
+const staticFiles = () => {
+  return gulp.src(config.paths.src.static)
     .pipe(newer(config.paths.dist.main))
     .pipe(gulp.dest(config.paths.dist.main));
-
-  // gulp.src(config.paths.src.img)
-  //   .pipe(gulp.dest(config.paths.dist.img));
-
-  done()
 }
 
 const cleanDir = () => {
@@ -130,7 +123,7 @@ const cleanDir = () => {
 }
 
 const watchFiles = () => {
-  gulp.watch('src/sass/**/*.scss', gulp.series(css, browserSyncReload));
+  gulp.watch('src/sass/**/*.scss', gulp.series(css));
   gulp.watch('src/js/**/*.js', gulp.series(scripts, browserSyncReload));
   gulp.watch('src/**/*.html', gulp.series(staticFiles, browserSyncReload));
   gulp.watch('src/**/*.php', gulp.series(staticFiles, browserSyncReload));
@@ -140,7 +133,6 @@ const watchFiles = () => {
 const build = gulp.series(cleanDir, gulp.parallel(css, scripts, staticFiles, images))
 const serve = gulp.series(build, gulp.parallel(watchFiles, devServer))
 const watch = gulp.parallel(build, watchFiles)
-
 
 exports.default = build
 exports.build = build

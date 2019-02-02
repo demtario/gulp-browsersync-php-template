@@ -17,7 +17,7 @@ To build SASS and Babel JS
 npm run build
 ```
 
-To build watch files
+To watch files
 ```
 npm run watch
 ```
