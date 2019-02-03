@@ -1,20 +1,20 @@
 "use strict";
 
 // Plugins
-import gulp from 'gulp';
-import babel from 'gulp-babel';
-import sass from 'gulp-sass';
-import uglify from 'gulp-uglify';
-import concat from 'gulp-concat';
-import autoprefixer from 'gulp-autoprefixer';
-import clean from 'gulp-clean-css';
-import browserSync from 'browser-sync';
-import del from 'del';
+import gulp from 'gulp'
+import babel from 'gulp-babel'
+import sass from 'gulp-sass'
+import uglify from 'gulp-uglify'
+import concat from 'gulp-concat'
+import autoprefixer from 'gulp-autoprefixer'
+import clean from 'gulp-clean-css'
+import browserSync from 'browser-sync'
+import del from 'del'
 import php from 'gulp-connect-php'
 import wait from 'gulp-wait'
 import sourcemaps from 'gulp-sourcemaps'
 import newer from 'gulp-newer'
-import image from 'gulp-image';
+import image from 'gulp-image'
 
 browserSync.create('devServer')
 
@@ -113,7 +113,7 @@ function images() {
 
 // Static file managment
 const staticFiles = () => {
-  return gulp.src(config.paths.src.static)
+  return gulp.src(config.paths.src.static, {base: './src'})
     .pipe(newer(config.paths.dist.main))
     .pipe(gulp.dest(config.paths.dist.main));
 }
