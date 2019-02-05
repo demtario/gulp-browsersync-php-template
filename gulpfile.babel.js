@@ -11,7 +11,6 @@ import clean from 'gulp-clean-css'
 import browserSync from 'browser-sync'
 import del from 'del'
 import php from 'gulp-connect-php'
-import wait from 'gulp-wait'
 import sourcemaps from 'gulp-sourcemaps'
 import newer from 'gulp-newer'
 import image from 'gulp-image'
@@ -79,7 +78,6 @@ const browserSyncReload = (done) => {
 // CSS Compile and Lint
 const css = () => {
   return gulp.src(config.paths.src.sass)
-    .pipe(wait())
     .pipe(sourcemaps.init())
     .pipe(sass())
       .on('error', sass.logError)
@@ -95,11 +93,19 @@ const css = () => {
 // Javascript
 const scripts = () => {
   return gulp.src(config.paths.src.js)
+    .pipe(sourcemaps.init())
     .pipe(babel({
       presets: ['env']
     }))
+      .on('error', function(err) {
+        console.error('[Compilation Error]')
+        console.log('error Babel: ' + err.message + '\n')
+        console.log(err.codeFrame)
+        this.emit('end')
+      })
     .pipe(concat('app.js'))
     .pipe(uglify())
+    .pipe(sourcemaps.write('./'))
     .pipe(gulp.dest(config.paths.dist.js));
 }
 
