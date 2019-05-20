@@ -23,7 +23,8 @@ const config = {
     src: {
       static: [
         './src/**/*.html',
-        './src/**/*.php'
+        './src/**/*.php',
+        './src/**/.*',
       ],
       img: './src/img/**/*.*',
       sass: ['src/sass/app.scss'],
@@ -131,8 +132,7 @@ const cleanDir = () => {
 const watchFiles = () => {
   gulp.watch('src/sass/**/*.scss', gulp.series(css));
   gulp.watch('src/js/**/*.js', gulp.series(scripts, browserSyncReload));
-  gulp.watch('src/**/*.html', gulp.series(staticFiles, browserSyncReload));
-  gulp.watch('src/**/*.php', gulp.series(staticFiles, browserSyncReload));
+  gulp.watch(config.paths.src.static, gulp.series(staticFiles, browserSyncReload));
   gulp.watch('src/img/**/*', gulp.series(images))
 }
 
